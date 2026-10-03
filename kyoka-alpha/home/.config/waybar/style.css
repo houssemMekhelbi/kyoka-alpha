@@ -1,0 +1,297 @@
+/* Kyoka alpha bar (type: Chakra Petch + Martian Mono). One plane of Deep Violet at 78%
+ * split into three shards: the outer corners carry the fracture (14px cut
+ * top-left, 6px cut bottom-right), the inner edges are cracks at 12° and 5°,
+ * so no two edges are parallel. Edges are Pale Violet hairlines at 22%.
+ * Caps are PNGs in kyoka-alpha/ sitting in each box's side padding; the body
+ * is a gradient clipped to the content box. Hyprland blurs the layer. */
+
+@define-color void    #07060B;
+@define-color deep    #0F0B18;
+@define-color raised  #171225;
+@define-color hair    #2A2140;
+@define-color violet  #7B4FD6;
+@define-color pale    #A98BFF;
+@define-color bone    #EDE8DF;
+@define-color muted   #9C9489;
+@define-color ice     #8FD3F4;
+@define-color blood   #E06A88;
+
+* {
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    text-shadow: none;
+    min-height: 0;
+    font-family: "Chakra Petch", "IBM Plex Sans Arabic", "JetBrainsMono Nerd Font", sans-serif;
+    font-size: 12px;
+}
+
+window#waybar {
+    background: transparent;
+    color: @bone;
+}
+
+tooltip {
+    background: rgba(15, 11, 24, 0.94);
+    border: 1px solid alpha(@pale, 0.3);
+}
+
+tooltip label {
+    color: @bone;
+    font-family: "Martian Mono", "JetBrainsMono Nerd Font", monospace;
+}
+
+/* ---- shards -------------------------------------------------------- */
+
+.modules-left,
+.modules-center,
+.modules-right {
+    margin-bottom: 8px;
+    background-repeat: no-repeat;
+    background-origin: border-box, border-box, content-box;
+    background-clip: border-box, border-box, content-box;
+    background-position: left top, right top, left top;
+}
+
+.modules-left {
+    padding: 0 8px 0 14px;
+    background-image:
+        url("kyoka-alpha/l-start.png"),
+        url("kyoka-alpha/l-end.png"),
+        linear-gradient(to bottom,
+            alpha(@pale, 0.22) 0px, alpha(@pale, 0.22) 1px,
+            rgba(15, 11, 24, 0.78) 1px, rgba(15, 11, 24, 0.78) 33px,
+            alpha(@pale, 0.22) 33px, alpha(@pale, 0.22) 34px);
+    background-size: 14px 34px, 8px 34px, 100% 100%;
+}
+
+.modules-center {
+    padding: 0 4px 0 8px;
+    background-image:
+        url("kyoka-alpha/c-start.png"),
+        url("kyoka-alpha/c-end.png"),
+        linear-gradient(to bottom,
+            alpha(@pale, 0.22) 0px, alpha(@pale, 0.22) 1px,
+            rgba(15, 11, 24, 0.78) 1px, rgba(15, 11, 24, 0.78) 33px,
+            alpha(@pale, 0.22) 33px, alpha(@pale, 0.22) 34px);
+    background-size: 8px 34px, 4px 34px, 100% 100%;
+}
+
+.modules-right {
+    padding: 0 6px 0 4px;
+    background-image:
+        url("kyoka-alpha/r-start.png"),
+        url("kyoka-alpha/r-end.png"),
+        linear-gradient(to bottom,
+            alpha(@pale, 0.22) 0px, alpha(@pale, 0.22) 1px,
+            rgba(15, 11, 24, 0.78) 1px, rgba(15, 11, 24, 0.78) 33px,
+            alpha(@pale, 0.22) 33px, alpha(@pale, 0.22) 34px);
+    background-size: 4px 34px, 6px 34px, 100% 100%;
+}
+
+window#waybar.empty #window {
+    border-left: none;
+}
+
+/* ---- workspaces: shard grammar ------------------------------------- */
+/* Glyphs come from hattin-workspaces: ▱ empty (outline), ▰ occupied (Violet),
+ * ▰ active (Pale Violet), ▰ urgent (Blood), ╱ foreign. */
+
+#custom-ws-1, #custom-ws-2, #custom-ws-3, #custom-ws-4, #custom-ws-5,
+#custom-ws-6, #custom-ws-7, #custom-ws-8, #custom-ws-9, #custom-ws-10,
+#custom-ws-x {
+    min-width: 22px;
+    padding: 0;
+    margin: 0;
+    color: @violet;
+    font-family: "Noto Sans Symbols 2", "DejaVu Sans Mono", "JetBrainsMono Nerd Font", monospace;
+    font-size: 17px;
+}
+
+#custom-ws-1.empty, #custom-ws-2.empty, #custom-ws-3.empty, #custom-ws-4.empty,
+#custom-ws-5.empty, #custom-ws-6.empty, #custom-ws-7.empty, #custom-ws-8.empty,
+#custom-ws-9.empty, #custom-ws-10.empty {
+    color: alpha(@pale, 0.45);
+}
+
+/* Shown on a monitor that does not have focus: Pale Violet, quieter. */
+#custom-ws-1.active, #custom-ws-2.active, #custom-ws-3.active, #custom-ws-4.active,
+#custom-ws-5.active, #custom-ws-6.active, #custom-ws-7.active, #custom-ws-8.active,
+#custom-ws-9.active, #custom-ws-10.active {
+    color: alpha(@pale, 0.55);
+}
+
+#custom-ws-1.focused, #custom-ws-2.focused, #custom-ws-3.focused, #custom-ws-4.focused,
+#custom-ws-5.focused, #custom-ws-6.focused, #custom-ws-7.focused, #custom-ws-8.focused,
+#custom-ws-9.focused, #custom-ws-10.focused {
+    color: @pale;
+}
+
+#custom-ws-1.urgent, #custom-ws-2.urgent, #custom-ws-3.urgent, #custom-ws-4.urgent,
+#custom-ws-5.urgent, #custom-ws-6.urgent, #custom-ws-7.urgent, #custom-ws-8.urgent,
+#custom-ws-9.urgent, #custom-ws-10.urgent {
+    color: @blood;
+}
+
+#custom-ws-x {
+    color: @muted;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 12px;
+    padding: 0 4px;
+}
+
+#custom-ws-x.active {
+    color: @pale;
+}
+
+#custom-ws-1:hover, #custom-ws-2:hover, #custom-ws-3:hover, #custom-ws-4:hover,
+#custom-ws-5:hover, #custom-ws-6:hover, #custom-ws-7:hover, #custom-ws-8:hover,
+#custom-ws-9:hover, #custom-ws-10:hover, #custom-ws-x:hover {
+    background: alpha(@raised, 0.9);
+    color: @bone;
+}
+
+/* ---- next prayer (custom/mawaqit): left shard ---------------------- */
+/* City in Pale Violet caps, prayer in Muted Bone, time in Bone (markup from
+ * waybar-mawaqit); classes: soon (<15m, time Pale Violet), iqama, error. */
+
+#custom-mawaqit {
+    padding: 0 6px 0 10px;
+    margin: 8px 0 7px 6px;
+    border-left: 1px solid alpha(@pale, 0.2);
+    color: @bone;
+    font-family: "Martian Mono", "JetBrainsMono Nerd Font", monospace;
+    font-size: 10px;
+}
+
+#custom-mawaqit:hover {
+    background: alpha(@raised, 0.9);
+}
+
+#custom-mawaqit.error,
+#custom-mawaqit.unset {
+    color: @muted;
+}
+
+/* ---- window title (left shard, after the prayer) ------------------ */
+
+#window {
+    padding: 0 6px 0 10px;
+    margin: 8px 0 7px 6px;
+    border-left: 1px solid alpha(@pale, 0.2);
+    color: @muted;
+    letter-spacing: 0.3px;
+    font-size: 11px;
+}
+
+/* ---- instrument cluster (right shard) ----------------------------- */
+
+#custom-proton,
+#custom-tailscale,
+#network,
+#wireplumber,
+#bluetooth,
+#cpu,
+#memory,
+#temperature,
+#custom-nvidia,
+#power-profiles-daemon,
+#battery,
+#tray,
+#custom-tray-leader,
+#custom-notifications,
+#custom-idle,
+#custom-yawm {
+    padding: 0 9px;
+    margin: 8px 0 7px 0;
+    border-right: 1px solid alpha(@pale, 0.2);
+    color: @bone;
+    font-family: "Martian Mono", "JetBrainsMono Nerd Font", monospace;
+    font-size: 10px;
+}
+
+#custom-yawm {
+    border-right: none;
+}
+
+#clock {
+    padding: 0 10px;
+    color: @bone;
+    font-family: "Martian Mono", "JetBrainsMono Nerd Font", monospace;
+    font-size: 12px;
+}
+
+#power-profiles-daemon {
+    color: @muted;
+}
+
+#custom-proton.up,
+#custom-tailscale.up {
+    color: @ice;
+}
+
+#custom-proton.down,
+#custom-tailscale.down {
+    color: @blood;
+}
+
+#custom-yawm.due {
+    color: @pale;
+}
+
+#custom-yawm.overdue {
+    color: @blood;
+}
+
+#custom-yawm:hover {
+    background: alpha(@raised, 0.9);
+}
+
+#custom-nvidia.active {
+    color: @ice;
+}
+
+#custom-idle.off,
+#battery.warning,
+#temperature.critical {
+    color: @pale;
+}
+
+#battery.critical {
+    color: @blood;
+}
+
+/* ---- click-to-reveal groups (NET, SYS, ▱) ------------------------- */
+
+#network,
+#cpu,
+#custom-tray-leader {
+    color: @bone;
+}
+
+#network:hover,
+#cpu:hover,
+#custom-tray-leader:hover {
+    background: alpha(@raised, 0.9);
+}
+
+#custom-tray-leader {
+    color: @pale;
+    font-family: "Noto Sans Symbols 2", "DejaVu Sans Mono", monospace;
+    font-size: 12px;
+}
+
+#tray {
+    margin: 6px 0 6px 0;
+}
+
+/* Revealed members sit on Raised Violet so the group reads as one drawer. */
+.drawer-hidden {
+    background: alpha(@raised, 0.75);
+}
+
+#tray menu {
+    background: rgba(15, 11, 24, 0.94);
+    border: 1px solid alpha(@pale, 0.3);
+    color: @bone;
+}

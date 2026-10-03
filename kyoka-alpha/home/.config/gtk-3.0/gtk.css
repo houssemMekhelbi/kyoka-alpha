@@ -1,0 +1,343 @@
+/* Kyoka alpha for GTK3, layered on Adwaita-dark.
+ * Names kept from Kyoka delta: violet = Pale Violet lines, violet_deep =
+ * Violet, ice = Pale Violet focus, frost = Bone, ash = Muted Bone.
+ * Surfaces, selection and scrollbars are global; Thunar-only widgets are
+ * targeted through Thunar's own style classes (.path-bar-button,
+ * .standard-view, .shortcuts-pane, .statusbar-text). Window glass comes from
+ * Hyprland's active/inactive opacity, so backgrounds here are opaque. */
+
+@define-color kyoka_void       #07060B;
+@define-color kyoka_panel      #0F0B18;
+@define-color kyoka_raised     #171225;
+@define-color kyoka_hairline   #2A2140;
+@define-color kyoka_violet_deep #7B4FD6;
+@define-color kyoka_indigo     #8FD3F4;
+@define-color kyoka_violet     #A98BFF;
+@define-color kyoka_ice        #A98BFF;
+@define-color kyoka_frost      #EDE8DF;
+@define-color kyoka_ash        #9C9489;
+
+@define-color theme_bg_color          @kyoka_panel;
+@define-color theme_fg_color          @kyoka_frost;
+@define-color theme_base_color        @kyoka_void;
+@define-color theme_text_color        @kyoka_frost;
+@define-color theme_selected_bg_color @kyoka_raised;
+@define-color theme_selected_fg_color @kyoka_frost;
+@define-color insensitive_fg_color    @kyoka_ash;
+@define-color borders                 @kyoka_hairline;
+
+/* ---- global: selection and scrollbars ------------------------------ */
+
+selection,
+*:selected,
+*:selected:focus {
+    background-color: alpha(@kyoka_raised, 0.7);
+    color: @kyoka_frost;
+}
+
+scrollbar,
+scrollbar trough {
+    background: transparent;
+    border: none;
+}
+
+scrollbar slider {
+    min-width: 4px;
+    min-height: 4px;
+    border: none;
+    border-radius: 0;
+    background-color: alpha(@kyoka_violet, 0.4);
+}
+
+scrollbar slider:hover {
+    background-color: alpha(@kyoka_violet, 0.7);
+}
+
+tooltip,
+tooltip.background {
+    background-color: rgba(15, 11, 24, 0.94);
+    border: 1px solid alpha(@kyoka_violet, 0.5);
+    border-radius: 0;
+    color: @kyoka_frost;
+}
+
+/* ---- surfaces ---------------------------------------------------- */
+
+window.background,
+menubar,
+.toolbar,
+toolbar,
+statusbar,
+notebook,
+notebook header,
+paned {
+    background-color: @kyoka_void;
+    background-image: none;
+    color: @kyoka_ash;
+    box-shadow: none;
+}
+
+.view,
+iconview,
+treeview.view,
+textview text,
+scrolledwindow viewport {
+    background-color: @kyoka_void;
+    color: @kyoka_ash;
+}
+
+.sidebar,
+.sidebar .view,
+placessidebar,
+placessidebar list {
+    background-color: @kyoka_panel;
+    color: @kyoka_ash;
+}
+
+menubar,
+.toolbar,
+toolbar {
+    border-bottom: 1px solid alpha(@kyoka_violet, 0.25);
+}
+
+menubar > menuitem {
+    color: @kyoka_ash;
+}
+
+menubar > menuitem:hover {
+    background-color: alpha(@kyoka_raised, 0.6);
+    color: @kyoka_frost;
+    box-shadow: inset 0 -1px @kyoka_violet;
+}
+
+menu,
+.menu,
+.context-menu,
+popover,
+popover.background {
+    background-color: @kyoka_void;
+    border: 1px solid alpha(@kyoka_violet, 0.5);
+    border-radius: 0;
+    color: @kyoka_ash;
+}
+
+menu menuitem:hover,
+.menu menuitem:hover {
+    background-color: @kyoka_raised;
+    color: @kyoka_frost;
+}
+
+entry {
+    background-color: @kyoka_raised;
+    border: 1px solid alpha(@kyoka_violet, 0.35);
+    border-radius: 0;
+    box-shadow: none;
+    color: @kyoka_frost;
+    caret-color: @kyoka_ice;
+}
+
+entry:focus {
+    border-color: @kyoka_violet;
+}
+
+button {
+    border-radius: 0;
+}
+
+paned > separator {
+    background: alpha(@kyoka_violet, 0.2);
+    background-image: none;
+    min-width: 1px;
+    min-height: 1px;
+}
+
+headerbar {
+    background: @kyoka_panel;
+    border-bottom: 1px solid @kyoka_violet;
+    border-radius: 0;
+    box-shadow: none;
+    color: @kyoka_frost;
+}
+
+/* ---- Thunar ------------------------------------------------------- */
+
+/* Path bar: breadcrumb of violet slashes, current segment boxed in
+ * Raised. GTK3 CSS has no generated content, so the slash is an image
+ * (kyoka-alpha/crumb-chevron.png) sitting in each non-current segment's right padding. */
+.path-bar-button {
+    background-color: transparent;
+    background-image: none;
+    background-repeat: no-repeat;
+    background-position: right center;
+    background-size: 10px 18px;
+    border: 1px solid transparent;
+    border-radius: 0;
+    box-shadow: none;
+    color: @kyoka_ash;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 11px;
+    padding: 2px 16px 2px 4px;
+    margin: 0;
+    min-height: 0;
+}
+
+/* Segments carry the slash; the checked (current) segment and the two
+ * scroll arrows packed at the end of the path bar stay bare. */
+.path-bar .path-bar-button {
+    background-image: -gtk-scaled(url("kyoka-alpha/crumb-chevron.png"));
+}
+
+.path-bar .path-bar-button:checked,
+.path-bar > .path-bar-button:nth-last-child(-n+2) {
+    background-image: none;
+}
+
+.path-bar-button:hover {
+    color: @kyoka_frost;
+}
+
+.path-bar-button:checked {
+    background-color: alpha(@kyoka_raised, 0.8);
+    border-color: alpha(@kyoka_violet, 0.35);
+    color: @kyoka_frost;
+    padding: 2px 8px;
+    margin-left: 4px;
+}
+
+.path-bar-button image {
+    color: @kyoka_ice;
+    -gtk-icon-style: symbolic;
+}
+
+.toolbar button,
+toolbar button {
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    color: @kyoka_violet;
+}
+
+.toolbar button:hover,
+toolbar button:hover {
+    background-color: alpha(@kyoka_raised, 0.6);
+    color: @kyoka_ice;
+}
+
+.toolbar button:disabled,
+toolbar button:disabled {
+    color: alpha(@kyoka_violet, 0.35);
+}
+
+.shortcuts-pane {
+    border-right: 1px solid alpha(@kyoka_violet, 0.2);
+}
+
+.sidebar .view {
+    padding: 3px 0;
+}
+
+/* Sidebar: small panes (16px Kyoka icons); the current place lifts to
+ * Raised with a violet hairline and a brightened pane. */
+.sidebar .view {
+    font-size: 12px;
+}
+
+.sidebar .view:selected,
+.sidebar .view:selected:focus {
+    background-color: alpha(@kyoka_raised, 0.9);
+    color: @kyoka_frost;
+    box-shadow: inset 0 0 0 1px alpha(@kyoka_violet, 0.5);
+    -gtk-icon-effect: highlight;
+}
+
+.sidebar .view.cell:hover {
+    color: @kyoka_frost;
+}
+
+/* File view selection: Raised with a 1px violet outline. */
+.standard-view iconview:selected,
+.standard-view iconview:selected:focus,
+.standard-view treeview.view:selected,
+.standard-view treeview.view:selected:focus,
+.standard-view .view:selected {
+    background-color: @kyoka_raised;
+    color: @kyoka_frost;
+    outline: 1px solid @kyoka_violet;
+    outline-offset: -1px;
+    border-radius: 0;
+}
+
+.standard-view treeview.view header button {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid alpha(@kyoka_violet, 0.25);
+    color: @kyoka_violet;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+}
+
+.split-view-inactive-pane {
+    opacity: 0.8;
+}
+
+/* Status bar: 10px mono, letter-spaced. */
+statusbar,
+.statusbar-text {
+    border-top: 1px solid alpha(@kyoka_violet, 0.25);
+    color: @kyoka_ash;
+    font-family: "JetBrainsMono Nerd Font", monospace;
+    font-size: 10px;
+    letter-spacing: 0.8px;
+}
+
+/* ---- Kyoka alpha: selection and focus ----------------------------- */
+/* One selection language everywhere: Raised Violet fill, a 1px Pale Violet
+ * rule on the left edge only, no outline elsewhere. */
+
+.path-bar-button:checked {
+    border-color: transparent;
+    box-shadow: inset 1px 0 0 @kyoka_violet;
+}
+
+.sidebar .view:selected,
+.sidebar .view:selected:focus {
+    box-shadow: inset 1px 0 0 @kyoka_violet;
+}
+
+.standard-view iconview:selected,
+.standard-view iconview:selected:focus,
+.standard-view treeview.view:selected,
+.standard-view treeview.view:selected:focus,
+.standard-view .view:selected {
+    outline: none;
+    box-shadow: inset 1px 0 0 @kyoka_violet;
+}
+
+/* Scrollbar: 3px Violet at 40%, no track. */
+scrollbar slider {
+    min-width: 3px;
+    min-height: 3px;
+    background-color: alpha(@kyoka_violet_deep, 0.4);
+}
+
+scrollbar slider:hover {
+    background-color: alpha(@kyoka_violet_deep, 0.7);
+}
+
+/* Hairlines are Pale Violet at 18-22%. */
+menubar, .toolbar, toolbar, statusbar, .statusbar-text,
+.standard-view treeview.view header button {
+    border-color: alpha(@kyoka_violet, 0.2);
+}
+
+* {
+    font-family: "Chakra Petch", "IBM Plex Sans Arabic", sans-serif;
+}
+
+.path-bar-button,
+statusbar,
+.statusbar-text,
+.standard-view treeview.view header button {
+    font-family: "Martian Mono", monospace;
+}

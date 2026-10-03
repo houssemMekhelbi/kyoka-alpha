@@ -1,0 +1,79 @@
+# Kyoka alpha terminal. Void at 86%, compositor blur behind it.
+
+[window]
+opacity = 0.86
+padding = { x = 16, y = 16 }
+decorations = "None"
+blur = true
+
+[font]
+normal = { family = "Martian Mono", style = "Regular" }
+size = 10
+offset = { x = 0, y = 5 }
+
+[cursor]
+style = { shape = "Block", blinking = "Off" }
+vi_mode_style = { shape = "Beam" }
+thickness = 0.15
+
+[colors.primary]
+background = "#07060B"
+foreground = "#9C9489"
+bright_foreground = "#EDE8DF"
+
+[colors.cursor]
+text = "#07060B"
+cursor = "#A98BFF"
+
+[colors.selection]
+text = "#EDE8DF"
+background = "#171225"
+
+# Search, hints, the footer bar and the vi-mode cursor in the theme's colours (alacritty's stock ones otherwise).
+[colors.search.matches]
+foreground = "#07060B"
+background = "#8FD3F4"
+
+[colors.search.focused_match]
+foreground = "#07060B"
+background = "#A98BFF"
+
+[colors.hints.start]
+foreground = "#07060B"
+background = "#A98BFF"
+
+[colors.hints.end]
+foreground = "#A98BFF"
+background = "#171225"
+
+[colors.footer_bar]
+foreground = "#EDE8DF"
+background = "#171225"
+
+[colors.line_indicator]
+foreground = "#07060B"
+background = "#7B4FD6"
+
+[colors.vi_mode_cursor]
+text = "#07060B"
+cursor = "#8FD3F4"
+
+[colors.normal]
+black   = "#07060B"
+red     = "#C24B6B"
+green   = "#5DA88A"
+yellow  = "#C9B27A"
+blue    = "#6E7FD6"
+magenta = "#9A6BE8"
+cyan    = "#7FC4DD"
+white   = "#9C9489"
+
+[colors.bright]
+black   = "#2A2140"
+red     = "#E06A88"
+green   = "#7FCBA8"
+yellow  = "#E5CF95"
+blue    = "#8F9EF0"
+magenta = "#B994FF"
+cyan    = "#A6DDF0"
+white   = "#EDE8DF"

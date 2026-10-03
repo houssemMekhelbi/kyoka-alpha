@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+# Taskwarrior popups for the waybar "yawm" module, same glass frame as the
+# launcher (window rules kyoka-yawm / kyoka-yawm-add in hypr/kyoka-*.lua).
+#   kyoka-yawm        task list  (click)
+#   kyoka-yawm add    quick add  (right-click)
+# Running it again while that popup is open closes it.
+set -euo pipefail
+
+mode=${1:-list}
+if [[ $mode == add ]]; then
+    class=kyoka-yawm-add title="Add task"
+else
+    class=kyoka-yawm title="Yawm"
+fi
+
+if hyprctl clients -j | grep -q "\"class\": \"$class\""; then
+    hyprctl eval 'kyoka_close_popups()' >/dev/null
+    exit 0
+fi
+
+exec foot \
+    --app-id="$class" \
+    --title="$title" \
+    -o main.pad=18x14 \
+    -o main.font="Martian Mono:size=10" \
+    -o main.line-height=22 \
+    -o colors-dark.alpha=0.86 \
+    -o colors-dark.blur=yes \
+    "$HOME/.local/bin/kyoka-yawm-menu" "$mode"

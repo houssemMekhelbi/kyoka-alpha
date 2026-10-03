@@ -1,0 +1,235 @@
+#!/usr/bin/env python3
+"""Prayer alert banner (Kyoka alpha): a layer-shell card on every monitor, above
+fullscreen windows, without taking keyboard focus. Click to dismiss.
+
+    mawaqit-alert '<json>'
+      kind      "adhan" | "iqama"
+      en, ar    prayer name ("Asr", "العصر")
+      time      "17:00"          mosque  "Paris"
+      iqama     "17:10" | null   iqama_ts  epoch of the iqama | null
+      duration  seconds on screen
+Sound: ~/.local/share/mawaqit/sounds/<kind>.wav; MAWAQIT_CHIME=<file> overrides,
+MAWAQIT_CHIME= (empty) silences. Rings again after MAWAQIT_REPEAT seconds (60)
+unless dismissed.
+
+Launched by `waybar-mawaqit watch` (mawaqit-alerts.service). Namespace
+hattin-mawaqit, so hypr/kyoka-*.lua's ^hattin- layer rule gives it glass.
+"""
+
+import json
+import os
+import subprocess
+import sys
+import time
+
+LIB = "/usr/lib/libgtk4-layer-shell.so"
+if LIB not in os.environ.get("LD_PRELOAD", ""):  # must load before libwayland
+    os.environ["LD_PRELOAD"] = f"{LIB} {os.environ.get('LD_PRELOAD', '')}".strip()
+    os.execv(sys.executable, [sys.executable] + sys.argv)
+
+import gi  # noqa: E402
+gi.require_version("Gtk", "4.0")
+gi.require_version("Gdk", "4.0")
+gi.require_version("Gtk4LayerShell", "1.0")
+from gi.repository import Gdk, GLib, Gtk, Gtk4LayerShell as LS  # noqa: E402
+import cairo  # noqa: E402
+
+SOUNDS = os.path.expanduser("~/.local/share/mawaqit/sounds")  # adhan.wav, iqama.wav (make.py)
+FALLBACK = "/usr/share/sounds/freedesktop/stereo/complete.oga"
+REPEAT = int(os.environ.get("MAWAQIT_REPEAT", "60"))  # seconds until the reminder ring
+
+
+def chime(kind):
+    """MAWAQIT_CHIME overrides (empty = silent); else the bell for this kind."""
+    if "MAWAQIT_CHIME" in os.environ:
+        return os.environ["MAWAQIT_CHIME"]
+    path = os.path.join(SOUNDS, f"{kind}.wav")
+    return path if os.path.exists(path) else FALLBACK
+M = 18                                   # room around the card for the aura
+W, H = 420, 132                          # card size
+CUT, CUT2 = 14, 6                        # fracture 14/6: top-left, bottom-right
+
+DEEP = (0x0F / 255, 0x0B / 255, 0x18 / 255)
+VIOLET = (0x7B / 255, 0x4F / 255, 0xD6 / 255)
+PALE = (0xA9 / 255, 0x8B / 255, 0xFF / 255)
+VOID = (0x07 / 255, 0x06 / 255, 0x0B / 255)
+
+CSS = b"""
+window { background: transparent; }
+.card { padding: 18px 24px 12px 60px; }
+.name { font-family: "Italiana", serif; font-size: 38px;
+        font-weight: 400; color: #EDE8DF; }
+.ar   { font-family: "Amiri", serif; font-size: 26px; color: #A98BFF; }
+.tag  { font-family: "Martian Mono", monospace; font-size: 10px;
+        letter-spacing: 2px; color: #A98BFF; }
+.sub  { font-family: "Martian Mono", monospace; font-size: 11px; color: #9C9489; }
+.hint { font-family: "Martian Mono", monospace; font-size: 9px;
+        letter-spacing: 2px; color: alpha(#9C9489, 0.7); }
+"""
+
+
+def fractured(cr, x, y, w, h, c1, c2):
+    """Card outline: sharp corners, 14px cut top-left, 6px cut bottom-right."""
+    cr.move_to(x + c1, y)
+    cr.line_to(x + w, y)
+    cr.line_to(x + w, y + h - c2)
+    cr.line_to(x + w - c2, y + h)
+    cr.line_to(x, y + h)
+    cr.line_to(x, y + c1)
+    cr.close_path()
+
+
+def shard(cr, cx, cy, w, h):
+    """The shard primitive: a parallelogram skewed 15°."""
+    k = h * 0.268  # tan 15°
+    cr.move_to(cx - w / 2 + k / 2, cy - h / 2)
+    cr.line_to(cx + w / 2 + k / 2, cy - h / 2)
+    cr.line_to(cx + w / 2 - k / 2, cy + h / 2)
+    cr.line_to(cx - w / 2 - k / 2, cy + h / 2)
+    cr.close_path()
+
+
+def draw(iqama):
+    def fn(_area, cr, w, h):
+        x, y, cw, ch = M + 0.5, M + 0.5, W - 1, H - 1
+        # aura: the adhan banner only, a soft violet halo outside the frame
+        if not iqama:
+            for i in range(14, 0, -1):
+                fractured(cr, x, y, cw, ch, CUT, CUT2)
+                cr.set_source_rgba(*VIOLET, 0.035)
+                cr.set_line_width(i * 2)
+                cr.stroke()
+        # body: Deep Violet glass
+        fractured(cr, x, y, cw, ch, CUT, CUT2)
+        cr.set_source_rgba(*DEEP, 0.92)
+        cr.fill_preserve()
+        # frame: 1px gradient, Pale Violet fading to transparent at 160°
+        g = cairo.LinearGradient(x, y, x + cw * 0.9, y + ch)
+        g.add_color_stop_rgba(0, *PALE, 1)
+        g.add_color_stop_rgba(0.4, *VIOLET, 1)
+        g.add_color_stop_rgba(1, *VIOLET, 0.25)
+        cr.set_source(g)
+        cr.set_line_width(1)
+        cr.stroke()
+        # the shard glyph: outlined for adhan, filled with a crack for iqama
+        gx, gy = M + 34, M + 44
+        shard(cr, gx, gy, 16, 22)
+        cr.set_line_width(1.4)
+        if iqama:
+            cr.set_source_rgba(*PALE, 1)
+            cr.fill()
+            cr.move_to(gx - 7, gy + 6)
+            cr.line_to(gx + 6, gy - 5)
+            cr.set_source_rgba(*VOID, 1)
+            cr.set_line_width(1.6)
+            cr.stroke()
+        else:
+            cr.set_source_rgba(*PALE, 1)
+            cr.stroke()
+    return fn
+
+
+def until(ts):
+    s = max(0, int(ts - time.time()))
+    m, s = divmod(s, 60)
+    return f"in {m}m {s:02d}s" if m else f"in {s}s"
+
+
+def build(app, a, monitor):
+    win = Gtk.ApplicationWindow(application=app)
+    LS.init_for_window(win)
+    LS.set_namespace(win, "hattin-mawaqit")
+    LS.set_layer(win, LS.Layer.OVERLAY)
+    LS.set_anchor(win, LS.Edge.TOP, True)
+    LS.set_margin(win, LS.Edge.TOP, 14 - M // 2)
+    LS.set_keyboard_mode(win, LS.KeyboardMode.NONE)
+    LS.set_monitor(win, monitor)
+    win.set_default_size(W + 2 * M, H + 2 * M)
+
+    iqama = a["kind"] == "iqama"
+    area = Gtk.DrawingArea()
+    area.set_content_width(W + 2 * M)
+    area.set_content_height(H + 2 * M)
+    area.set_draw_func(draw(iqama))
+
+    name = Gtk.Label(label=a["en"], xalign=0)
+    name.add_css_class("name")
+    ar = Gtk.Label(label=a["ar"], xalign=0, hexpand=True)
+    ar.add_css_class("ar")
+    tag = Gtk.Label(label="IQAMA" if iqama else "ADHAN", xalign=1, valign=Gtk.Align.START)
+    tag.add_css_class("tag")
+    title = Gtk.Box(spacing=12)
+    title.append(name)
+    title.append(ar)
+    title.append(tag)
+
+    sub = Gtk.Label(xalign=0)
+    sub.add_css_class("sub")
+
+    minutes = max(1, round(int(a.get("duration", 240)) / 60))
+    hint = Gtk.Label(label=f"{minutes} MIN" if iqama else "DISMISS", xalign=1)
+    hint.add_css_class("hint")
+
+    def tick():
+        head = f"{a['mosque']} · {a['time']}"
+        if iqama:
+            sub.set_label(f"{a['mosque']} · {a.get('iqama') or a['time']} · the prayer is starting")
+        elif a.get("iqama_ts") and a["iqama_ts"] > time.time():
+            sub.set_label(f"{head} · iqama {a['iqama']} · {until(a['iqama_ts'])}")
+        elif a.get("iqama"):
+            sub.set_label(f"{head} · iqama {a['iqama']} · now")
+        else:
+            sub.set_label(f"{head} · time for prayer")
+        return True
+    tick()
+    GLib.timeout_add_seconds(1, tick)
+
+    card = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=2, valign=Gtk.Align.START)
+    card.add_css_class("card")
+    card.set_margin_top(M)
+    card.set_margin_start(M)
+    card.set_margin_end(M)
+    for w in (title, sub, hint):
+        card.append(w)
+
+    over = Gtk.Overlay()
+    over.set_child(area)
+    over.add_overlay(card)
+    win.set_child(over)
+
+    click = Gtk.GestureClick()
+    click.connect("pressed", lambda *_: app.quit())
+    win.add_controller(click)
+    win.present()
+
+
+def main():
+    a = json.loads(sys.argv[1])
+    app = Gtk.Application(application_id=None)
+
+    def activate(app):
+        prov = Gtk.CssProvider()
+        prov.load_from_data(CSS)
+        disp = Gdk.Display.get_default()
+        Gtk.StyleContext.add_provider_for_display(disp, prov, Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION)
+        mons = disp.get_monitors()
+        for i in range(mons.get_n_items()):
+            build(app, a, mons.get_item(i))
+        app.hold()
+        GLib.timeout_add_seconds(max(30, int(a.get("duration", 300))), app.quit)
+        sound = chime(a["kind"])
+        if sound and os.path.exists(sound):
+            def ring():
+                subprocess.Popen(["pw-play", "--media-role", "Notification", sound],
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return False
+            ring()
+            # one reminder if the banner is still up; dismissing quits first
+            GLib.timeout_add_seconds(REPEAT, ring)
+
+    app.connect("activate", activate)
+    app.run([])
+
+
+if __name__ == "__main__":
+    main()
