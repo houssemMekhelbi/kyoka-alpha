@@ -8,7 +8,7 @@ A desktop that never raises its voice.
 
 Void planes. A violet aura, felt more than seen. Bone type. One accent at a time. The fracture is 14 by 6, and it is drawn only where it can be.
 
-The other Kyoka is [hattin-kyoka-delta](https://github.com/houssemMekhelbi/hattin-kyoka-delta).
+The other Kyoka is [kyoka-delta](https://github.com/houssemMekhelbi/kyoka-delta).
 
 ## Palette
 
@@ -54,8 +54,8 @@ sudo pacman -S --needed $(grep -v '^#' kyoka-alpha/packages.txt)
 > Everything it replaces is backed up first.
 
 ```sh
-git clone https://github.com/houssemMekhelbi/hattin-kyoka-alpha.git
-cd hattin-kyoka-alpha
+git clone https://github.com/houssemMekhelbi/kyoka-alpha.git
+cd kyoka-alpha
 ./kyoka-alpha/restore.sh --dry-run   # show what would change, touch nothing
 ./kyoka-alpha/restore.sh             # apply
 ```
